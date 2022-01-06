@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "state-interface"
 version = "0.1.0"
-description = ""
+description = "ASE STATE interface"
 authors = ["ueda <ueda@cp.prec.eng.osaka-u.ac.jp>"]
 
 [tool.poetry.dependencies]
