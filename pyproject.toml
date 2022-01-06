@@ -2,7 +2,7 @@
 name = "state-interface"
 version = "0.1.0"
 description = "ASE STATE interface"
-authors = ["ueda <ueda@cp.prec.eng.osaka-u.ac.jp>"]
+authors = ["harry <harry@cp.prec.eng.osaka-u.ac.jp>, ueda <ueda@cp.prec.eng.osaka-u.ac.jp>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
