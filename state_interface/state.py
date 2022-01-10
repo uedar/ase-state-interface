@@ -35,52 +35,21 @@ class STATE(FileIOCalculator):
     
     def write_input(self, atoms, properties=None, system_changes=None):
         FileIOCalculator.write_input(self, atoms, properties, system_changes)
-        NATM      = atoms.get_global_number_of_atoms()
-        COORDS    = atoms.get_positions() * 1/Bohr2Ang
-        SPECIES   = list(set(atoms.get_chemical_symbols()))
-        ATOMIC_NUMS = atoms.get_atomic_numbers()
-        NTYP      = len(SPECIES)
-        CELL      = atoms.get_cell() * 1/Bohr2Ang
-        
+        natom     = atoms.get_global_number_of_atoms()
+        coords    = atoms.get_positions() * 1/Bohr2Ang
+        species   = list(set(atoms.get_chemical_symbols()))
+        atomic_nums = atoms.get_atomic_numbers()
+        ntyp    = len(species)
+        cell     = atoms.get_cell() * 1/Bohr2Ang
         with open (self.label + '.in', 'w') as fd:
             input_data = self.parameters['input_data']
-            PSEUDO_IDX = {lst[0]: i+1 for i, lst in enumerate(input_data['PSEUDOS'])}
-            print ('#', file = fd)
-            print ('#', file = fd)
-            print ('#', file = fd)
-            print("WF_OPT", input_data['WF_OPT'], file = fd)
-            if 'GEO_OPT' in input_data:
-                print("GEO_OPT",   input_data['GEO_OPT'], file = fd)
-            print("NTYP",   NTYP, file = fd)
-            print("NATM",   NATM, file = fd)
-            if 'TYPE' in input_data:
-                print("TYPE",   input_data['TYPE'], file = fd)
-            print("NSPG",   input_data['NSPG'], file = fd)
-            if 'VERBOSITY' in input_data:
-                print("VERBOSITY",   input_data['VERBOSITY'], file = fd)
-            print("GMAX",   input_data['GMAX'], file = fd)
-            print("GMAXP",  input_data['GMAXP'], file = fd)
-            if 'NSCF' in input_data:
-                print("NSCF",   input_data['NSCF'], file = fd)
-            print("KPOINT_MESH",  *input_data['KPOINT_MESH'], file = fd)
-            print("KPOINT_SHIFT", *input_data['KPOINT_SHIFT'], file = fd)
-            if 'SMEARING' in input_data:
-                print("SMEARING",   input_data['SMEARING'], file = fd)
-            print("WIDTH",  input_data['WIDTH'], file = fd)
-            if 'MIX' in input_data:
-                print("MIX",   input_data['MIX'], file = fd)
-            if 'MIX_ALPHA' in input_data:
-                print("MIX_ALPHA",   input_data['MIX_ALPHA'], file = fd)
-            if 'DTIO' in input_data:
-                print("DTIO",   input_data['DTIO'], file = fd)
-            if 'FMAX' in input_data:
-                print("FMAX",   input_data['FMAX'], file = fd)
-            print("EDELTA", input_data['EDELTA'], file = fd)
-            print("NEG",    input_data['NEG'], file = fd)
-            if 'XTYPE' in input_data:
-                print("XTYPE",   input_data['XTYPE'], file = fd)
+            print ("#\n#\n#", file = fd)
+            print("NTYP",   ntyp, file = fd)
+            print("NATM",   natom, file = fd)
+            for parameter in input_data.keys():
+                write_parameter(parameter, input_json=input_data,file=fd)
             print ("&CELL", file = fd)
-            for cell_vector in CELL:
+            for cell_vector in cell:
                 print (*cell_vector, file = fd)
             print ("&END", file = fd)
             print("&ATOMIC_SPECIES", file = fd)
@@ -88,9 +57,13 @@ class STATE(FileIOCalculator):
                 print(*line, file = fd)
             print("&END", file = fd)
             print("&ATOMIC_COORDINATES", "CARTESIAN", file = fd)
-            for i,line in enumerate(COORDS):
-                cs = chemical_symbols[ATOMIC_NUMS[i]]
-                print(*line, 1,1,PSEUDO_IDX[cs], file=fd)
+            pseudo_idx = {lst[0]: i+1 for i, lst in enumerate(input_data['PSEUDOS'])}
+            substrate_idx = input_data['SUBSTRATE_IDX'] if 'SUBSTRATE_IDX' in input_data else []
+            substrate_set = get_substrate_set(substrate_idx)
+            for i,line in enumerate(coords):
+                cs = chemical_symbols[atomic_nums[i]]
+                imdtyp = 0 if i+1 in substrate_set else 1
+                print(*line, 1, imdtyp ,pseudo_idx[cs], file=fd)
             print ("&END", file = fd)
             if 'VDW-DF' in input_data:
                 print('&VDW-DF', file = fd)
@@ -131,3 +104,23 @@ class STATE(FileIOCalculator):
     
     def get_stress(self, atoms):
         return np.zeros((3,3))
+
+
+def write_parameter(parameter,input_json, file):
+    if parameter == 'KPOINT_MESH':
+        print('KPOINT_MESH', *input_json['KPOINT_MESH'], file=file)
+    elif parameter == 'KPOINT_SHIFT':
+        print('KPOINT_SHIFT', *input_json['KPOINT_SHIFT'], file=file)
+    elif parameter in ['PSEUDOS', 'SUBSTRATE_IDX', 'VDW-DF']:
+        pass
+    else:
+        print(parameter, input_json[parameter], file=file)
+
+def get_substrate_set(substrate_ids):
+    id_set = set()
+    for ids in substrate_ids: 
+        start = re.search('^[0-9]+(?=:)', ids).group()
+        end = re.search('(?<=:)[0-9]+', ids).group()
+        lst = [i for i in range(int(start), int(end)+1)]
+        id_set |= set(lst)
+    return id_set
