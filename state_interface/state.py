@@ -9,6 +9,7 @@ from ase.atoms import Atoms
 from ase.calculators.singlepoint import (SinglePointDFTCalculator)
 import re
 import numpy as np
+from ase.data import chemical_symbols
 
 error_template = 'Property "%s" not available. Please try running STATE\n' \
                  'first by calling Atoms.get_potential_energy().'
@@ -37,17 +38,23 @@ class STATE(FileIOCalculator):
         NATM      = atoms.get_global_number_of_atoms()
         COORDS    = atoms.get_positions() * 1/Bohr2Ang
         SPECIES   = list(set(atoms.get_chemical_symbols()))
+        ATOMIC_NUMS = atoms.get_atomic_numbers()
         NTYP      = len(SPECIES)
         CELL      = atoms.get_cell() * 1/Bohr2Ang
+        
         with open (self.label + '.in', 'w') as fd:
             input_data = self.parameters['input_data']
+            PSEUDO_IDX = {lst[0]: i+1 for i, lst in enumerate(input_data['PSEUDOS'])}
             print ('#', file = fd)
             print ('#', file = fd)
             print ('#', file = fd)
             print("WF_OPT", input_data['WF_OPT'], file = fd)
+            if 'GEO_OPT' in input_data:
+                print("GEO_OPT",   input_data['GEO_OPT'], file = fd)
             print("NTYP",   NTYP, file = fd)
             print("NATM",   NATM, file = fd)
-            print("TYPE",   input_data['TYPE'], file = fd)
+            if 'TYPE' in input_data:
+                print("TYPE",   input_data['TYPE'], file = fd)
             print("NSPG",   input_data['NSPG'], file = fd)
             if 'VERBOSITY' in input_data:
                 print("VERBOSITY",   input_data['VERBOSITY'], file = fd)
@@ -60,6 +67,14 @@ class STATE(FileIOCalculator):
             if 'SMEARING' in input_data:
                 print("SMEARING",   input_data['SMEARING'], file = fd)
             print("WIDTH",  input_data['WIDTH'], file = fd)
+            if 'MIX' in input_data:
+                print("MIX",   input_data['MIX'], file = fd)
+            if 'MIX_ALPHA' in input_data:
+                print("MIX_ALPHA",   input_data['MIX_ALPHA'], file = fd)
+            if 'DTIO' in input_data:
+                print("DTIO",   input_data['DTIO'], file = fd)
+            if 'FMAX' in input_data:
+                print("FMAX",   input_data['FMAX'], file = fd)
             print("EDELTA", input_data['EDELTA'], file = fd)
             print("NEG",    input_data['NEG'], file = fd)
             if 'XTYPE' in input_data:
@@ -73,8 +88,9 @@ class STATE(FileIOCalculator):
                 print(*line, file = fd)
             print("&END", file = fd)
             print("&ATOMIC_COORDINATES", "CARTESIAN", file = fd)
-            for line in COORDS:
-                print (*line, 1, 1, 1, file = fd)
+            for i,line in enumerate(COORDS):
+                cs = chemical_symbols[ATOMIC_NUMS[i]]
+                print(*line, 1,1,PSEUDO_IDX[cs], file=fd)
             print ("&END", file = fd)
             if 'VDW-DF' in input_data:
                 print('&VDW-DF', file = fd)
