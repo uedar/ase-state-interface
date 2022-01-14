@@ -26,8 +26,7 @@ input_data = {'WF_OPT'       :    'DAV' ,
               'NEG'          : 8,
               'PSEUDOS'      : [['Si', 28.00, 'pot.Si_pbe1']]
               }
-# ----------------  pseudo-potentials -----------------
-ion_pseudo = {'Si': 'pot.Si_pbe1'}
+
 # -------------- create ASE calculator ----------------
 dft_calc = STATE(label=label, input_data=input_data)
 super_cell.calc = dft_calc
