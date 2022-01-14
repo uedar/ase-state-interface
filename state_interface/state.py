@@ -76,7 +76,10 @@ class STATE(FileIOCalculator):
         data = []
         extract = False
         with open (self.label + '.out') as fd:
-            for line in fd:
+            lines = fd.readlines()
+            if 'The calculation has converged' not in str(lines):
+                warnings.warn('The calculation has not converged')
+            for line in lines:
                 if re.search('CONVERGED', line):
                     extract = True
                 if extract:
@@ -101,10 +104,6 @@ class STATE(FileIOCalculator):
         
         self.calc = calc
         self.results = calc.results
-    
-    def get_stress(self, atoms):
-        return np.zeros((3,3))
-
 
 def write_parameter(parameter,input_json, file):
     if parameter == 'KPOINT_MESH':
