@@ -11,6 +11,7 @@ import re
 import numpy as np
 from ase.data import chemical_symbols
 from .io import read_state_output
+from ase.units import Hartree,Bohr
 
 error_template = 'Property "%s" not available. Please try running STATE\n' \
                  'first by calling Atoms.get_potential_energy().'
@@ -18,9 +19,9 @@ warn_template = 'Property "%s" is None. Typically, this is because the ' \
                 'required information has not been printed by STATE ' \
                 'at a "low" verbosity level (the default). ' \
                 'Please try running STATE with "high" verbosity.'
-Ha2eV = 27.2114
-Bohr2Ang = 0.529177
-force_unit = Ha2eV/Bohr2Ang
+Ha2eV = Hartree
+Bohr2Ang = Bohr
+force_unit = Hartree/Bohr
 
 class STATE(FileIOCalculator):
     """
