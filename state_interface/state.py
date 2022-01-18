@@ -10,6 +10,7 @@ from ase.calculators.singlepoint import (SinglePointDFTCalculator)
 import re
 import numpy as np
 from ase.data import chemical_symbols
+from .io import read_state_output
 
 error_template = 'Property "%s" not available. Please try running STATE\n' \
                  'first by calling Atoms.get_potential_energy().'
@@ -72,38 +73,15 @@ class STATE(FileIOCalculator):
                 print('&END', file = fd)
             
     def read_results(self):
-        
-        data = []
-        extract = False
-        with open (self.label + '.out') as fd:
-            lines = fd.readlines()
-            if 'The calculation has converged' not in str(lines):
-                warnings.warn('The calculation has not converged')
-            for line in lines:
-                if re.search('CONVERGED', line):
-                    extract = True
-                if extract:
-                    data.append (line.split())
-                    if re.search('EXIT', line):
-                        extract = False
-        energy, f_max, f_rms = Ha2eV*float(data[2][1]), force_unit*float(data[2][2]), force_unit*float(data[2][3])
-        force_data = []
-        positions = []
-        species = []
-        for line in data[6:]:
-            if (line == []):
-                break
-            species.append (line[2])
-            positions.append (line[3:6])
-            force_data.append (line[6:9])
-        positions = Bohr2Ang*np.array(positions, dtype=float)
-        structure = Atoms(symbols=species, positions = positions)
-        forces = force_unit*np.array(force_data, dtype=float)
+        structure, energy, forces = read_state_output(self.label)
         calc = SinglePointDFTCalculator(structure, energy=energy,
                                         forces=forces)
         
         self.calc = calc
         self.results = calc.results
+
+    def get_stress(self, atoms):
+        return np.zeros((3,3))
 
 def write_parameter(parameter,input_json, file):
     if parameter == 'KPOINT_MESH':
