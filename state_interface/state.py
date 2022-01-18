@@ -1,9 +1,10 @@
 """STATE Calculator
-export ASE_STATE_COMMAND="/path/to/STATE -in PREFIX.in > PREFIX.out"
+export ASE_STATE_COMMAND="/path/to/STATE < PREFIX.in > PREFIX.out"
 Run STATE jobs.
 """
 import warnings
 from ase import io
+from ase.units import Bohr, Hartree
 from ase.calculators.calculator import FileIOCalculator, PropertyNotPresent
 from ase.atoms import Atoms
 from ase.calculators.singlepoint import (SinglePointDFTCalculator)
@@ -17,9 +18,8 @@ warn_template = 'Property "%s" is None. Typically, this is because the ' \
                 'required information has not been printed by STATE ' \
                 'at a "low" verbosity level (the default). ' \
                 'Please try running STATE with "high" verbosity.'
-Ha2eV = 27.2114
-Bohr2Ang = 0.529177
-force_unit = Ha2eV/Bohr2Ang
+
+force_unit = Hartree / Bohr
 
 class STATE(FileIOCalculator):
     """
@@ -36,11 +36,11 @@ class STATE(FileIOCalculator):
     def write_input(self, atoms, properties=None, system_changes=None):
         FileIOCalculator.write_input(self, atoms, properties, system_changes)
         NATM      = atoms.get_global_number_of_atoms()
-        COORDS    = atoms.get_positions() * 1/Bohr2Ang
+        COORDS    = atoms.get_positions() * 1 / Bohr
         SPECIES   = list(set(atoms.get_chemical_symbols()))
         ATOMIC_NUMS = atoms.get_atomic_numbers()
         NTYP      = len(SPECIES)
-        CELL      = atoms.get_cell() * 1/Bohr2Ang
+        CELL      = atoms.get_cell() * 1 / Bohr
         
         with open (self.label + '.in', 'w') as fd:
             input_data = self.parameters['input_data']
@@ -110,7 +110,7 @@ class STATE(FileIOCalculator):
                     data.append (line.split())
                     if re.search('EXIT', line):
                         extract = False
-        energy, f_max, f_rms = Ha2eV*float(data[2][1]), force_unit*float(data[2][2]), force_unit*float(data[2][3])
+        energy, f_max, f_rms = Hartree*float(data[2][1]), force_unit*float(data[2][2]), force_unit*float(data[2][3])
         force_data = []
         positions = []
         species = []
@@ -120,7 +120,7 @@ class STATE(FileIOCalculator):
             species.append (line[2])
             positions.append (line[3:6])
             force_data.append (line[6:9])
-        positions = Bohr2Ang*np.array(positions, dtype=float)
+        positions = Bohr * np.array(positions, dtype=float)
         structure = Atoms(symbols=species, positions = positions)
         forces = force_unit*np.array(force_data, dtype=float)
         calc = SinglePointDFTCalculator(structure, energy=energy,
