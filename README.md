@@ -1,9 +1,13 @@
 # ase-state-interface
 
-### Installation
+## Installation
 
-only available in test environment
 ```
-pip --no-cache-dir install --upgrade --index-url https://test.pypi.org/simple/ state-interface
+$ git clone git@github.com:uedar/ase-state-interface.git
+$ cd ase-state-interface
+$ pyenv local 3.7.5
+$ poetry install
 ```
 
+- [pyenv](https://uedar.github.io/install/pyenv.html)
+- [poetry](https://uedar.github.io/install/poetry.html)
