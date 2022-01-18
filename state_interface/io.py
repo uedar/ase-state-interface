@@ -2,11 +2,11 @@ import re
 from ase import Atoms
 import warnings
 import numpy as np
+from ase.units import Hartree,Bohr
 
-
-Ha2eV = 27.2114
-Bohr2Ang = 0.529177
-force_unit = Ha2eV/Bohr2Ang
+Ha2eV = 1*Hartree
+Bohr2Ang = 1*Bohr
+force_unit = Hartree/Bohr
 
 def read_state_input(input_file):
   file = open(input_file, 'r').read()
