@@ -2,10 +2,8 @@ import re
 from ase import Atoms
 import warnings
 import numpy as np
-from ase.units import Hartree,Bohr
+from ase.units import Hartree, Bohr
 
-Ha2eV = 1*Hartree
-Bohr2Ang = 1*Bohr
 force_unit = Hartree/Bohr
 
 def read_state_input(input_file):
@@ -40,7 +38,7 @@ def read_state_output(output_file):
               data.append (line.split())
               if re.search('EXIT', line):
                   extract = False
-  energy, f_max, f_rms = Ha2eV*float(data[2][1]), force_unit*float(data[2][2]), force_unit*float(data[2][3])
+  energy, f_max, f_rms = Hartree*float(data[2][1]), force_unit*float(data[2][2]), force_unit*float(data[2][3])
   force_data = []
   positions = []
   species = []
@@ -50,7 +48,7 @@ def read_state_output(output_file):
       species.append (line[2])
       positions.append (line[3:6])
       force_data.append (line[6:9])
-  positions = Bohr2Ang*np.array(positions, dtype=float)
+  positions = Bohr*np.array(positions, dtype=float)
   structure = Atoms(symbols=species, positions = positions)
   forces = force_unit*np.array(force_data, dtype=float)
   return structure, energy, forces
