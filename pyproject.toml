@@ -6,6 +6,7 @@ authors = ["Harry <harry@cp.prec.eng.osaka-u.ac.jp>", "Ueda <ueda@cp.prec.eng.os
 
 [tool.poetry.dependencies]
 python = "^3.7"
+ase = "^3.22"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
