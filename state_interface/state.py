@@ -19,7 +19,6 @@ warn_template = 'Property "%s" is None. Typically, this is because the ' \
                 'required information has not been printed by STATE ' \
                 'at a "low" verbosity level (the default). ' \
                 'Please try running STATE with "high" verbosity.'
-<<<<<<< HEAD
 
 force_unit = Hartree / Bohr
 
