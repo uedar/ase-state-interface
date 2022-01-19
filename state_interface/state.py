@@ -1,9 +1,10 @@
 """STATE Calculator
-export ASE_STATE_COMMAND="/path/to/STATE -in PREFIX.in > PREFIX.out"
+export ASE_STATE_COMMAND="/path/to/STATE < PREFIX.in > PREFIX.out"
 Run STATE jobs.
 """
 import warnings
 from ase import io
+from ase.units import Bohr, Hartree
 from ase.calculators.calculator import FileIOCalculator, PropertyNotPresent
 from ase.atoms import Atoms
 from ase.calculators.singlepoint import (SinglePointDFTCalculator)
@@ -11,7 +12,6 @@ import re
 import numpy as np
 from ase.data import chemical_symbols
 from .io import read_state_output
-from ase.units import Hartree,Bohr
 
 error_template = 'Property "%s" not available. Please try running STATE\n' \
                  'first by calling Atoms.get_potential_energy().'
@@ -19,9 +19,8 @@ warn_template = 'Property "%s" is None. Typically, this is because the ' \
                 'required information has not been printed by STATE ' \
                 'at a "low" verbosity level (the default). ' \
                 'Please try running STATE with "high" verbosity.'
-Ha2eV = Hartree
-Bohr2Ang = Bohr
-force_unit = Hartree/Bohr
+
+force_unit = Hartree / Bohr
 
 class STATE(FileIOCalculator):
     """
@@ -38,11 +37,11 @@ class STATE(FileIOCalculator):
     def write_input(self, atoms, properties=None, system_changes=None):
         FileIOCalculator.write_input(self, atoms, properties, system_changes)
         natom     = atoms.get_global_number_of_atoms()
-        coords    = atoms.get_positions() * 1/Bohr2Ang
+        coords    = atoms.get_positions() * 1 / Bohr
         species   = list(set(atoms.get_chemical_symbols()))
         atomic_nums = atoms.get_atomic_numbers()
         ntyp    = len(species)
-        cell     = atoms.get_cell() * 1/Bohr2Ang
+        cell     = atoms.get_cell() * 1 / Bohr
         with open (self.label + '.in', 'w') as fd:
             input_data = self.parameters['input_data']
             print ("#\n#\n#", file = fd)
