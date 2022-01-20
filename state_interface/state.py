@@ -73,7 +73,7 @@ class STATE(FileIOCalculator):
                 print('&END', file = fd)
             
     def read_results(self):
-        structure, energy, forces = read_state_output(self.label)
+        structure, energy, forces = read_state_output(self.label + '.out')
         calc = SinglePointDFTCalculator(structure, energy=energy,
                                         forces=forces)
         
