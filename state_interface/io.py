@@ -13,11 +13,10 @@ def read_state_input(input_file):
   atomic_species = [c.split() for c in atomic_species_str.split('\n')]
 
   cell_str = re.search(r'(?<=&CELL)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
-  cell = [c.split() for c in cell_str.split('\n')]
-
+  cell = Bohr*np.array([c.split() for c in cell_str.split('\n')], dtype=float)
   coord_str = re.search(r'(?<=&ATOMIC_COORDINATES CARTESIAN)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
   coord = [c.split() for c in coord_str.split('\n')]
-  positions = [c[:3] for c in coord]
+  positions = Bohr*np.array([c[:3] for c in coord], dtype=float)
 
   species_idx = {lst[0]: i+1 for i, lst in enumerate(atomic_species)}
   symbols = [k for k,v in species_idx.items() for c in coord if int(c[5]) == v]
