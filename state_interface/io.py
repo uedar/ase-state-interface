@@ -8,6 +8,7 @@ force_unit = Hartree/Bohr
 
 def read_state_input(input_file):
   file = open(input_file, 'r').read()
+  svar, sblk = varblock(input_file)
 
   atomic_species_str = re.search(r'(?<=&ATOMIC_SPECIES)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
   atomic_species = [c.split() for c in atomic_species_str.split('\n')]
@@ -51,3 +52,41 @@ def read_state_output(output_file):
   structure = Atoms(symbols=species, positions = positions)
   forces = force_unit*np.array(force_data, dtype=float)
   return structure, energy, forces
+
+
+def varblock(file):
+  """
+  Remove comments, captures input variable and block inputs separately
+  Input
+    STATE input file object 
+  Returns
+    svar = dictionary of input variables
+    sblk = list containing lines of block inputs
+  """
+  with open(file, 'r') as f:
+      lines = f.read().splitlines()
+
+  # Clean comments and trailing spaces
+  clean = []
+  for line in lines:
+      li = line.strip()
+      if not li.startswith('#'): clean.append(line.strip())
+  lines = clean.copy()
+  
+  # Seprate variables and blocks
+  for idx in range(len(lines)):
+      if lines[idx].startswith('&'):
+          blkstart_idx = idx
+          break
+  varlines = lines[:blkstart_idx]
+  sblk = lines[blkstart_idx:]
+
+  # Process varlines as dictionary
+  svar = dict()
+  for line in varlines:
+      parts = line.split()
+      varname = parts[0].upper()
+      svar[varname] = [x.upper() for x in parts[1:]]
+      
+  return svar, sblk
+
