@@ -9,7 +9,7 @@ b = a / 2
 
 input_data = {}
 
-dft_calc = STATE(label=label,input_data=input_data_
+dft_calc = STATE(label=label,input_data=input_data)
 
 ag = Atoms('Ag',
            cell=[(0, b, b), (b, 0, b), (b, b, 0)],
