@@ -9,7 +9,12 @@ force_unit = Hartree/Bohr
 
 def read_state_input(input_file):
     file = open(input_file, 'r').read()
-    svar, sblk = varblock(input_file)
+    # USE PARSER
+    # input = InputParser(input_file)
+    # input.InitParse()
+    # GET POSITION
+    # positions = input.blocks[ATOMIC_COORDINATES]['input']['cps']
+    # cell = input.blocks['CELL']['input']
 
     atomic_species_str = re.search(
         r'(?<=&ATOMIC_SPECIES)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
@@ -19,15 +24,22 @@ def read_state_input(input_file):
                          file, flags=re.DOTALL).group().strip()
     cell = Bohr*np.array([c.split()
                          for c in cell_str.split('\n')], dtype=float)
+    print("CELL \n", cell, "\n\n")
+    
+    
     coord_str = re.search(r'(?<=&ATOMIC_COORDINATES CARTESIAN)(.+?\n)(?=&END)',
                           file, flags=re.DOTALL).group().strip()
     coord = [c.split() for c in coord_str.split('\n')]
     positions = Bohr*np.array([c[:3] for c in coord], dtype=float)
+    print("POSITION \n", positions, "\n\n")
 
     species_idx = {lst[0]: i+1 for i, lst in enumerate(atomic_species)}
+    print('species_idx', species_idx)
     symbols = [k for k, v in species_idx.items()
                for c in coord if int(c[5]) == v]
+    print('symboles', symbols)
     structure = Atoms(symbols=symbols, positions=positions, cell=cell)
+    print(structure)
     return structure
 
 
@@ -79,6 +91,8 @@ class InputParser:
         self.CatchBlock()
         self.SubroutineManager()
         self.ReadBlock()
+        self.ErrorCheck()
+        self.ASECall()
 
     def VarBlock(self):
         '''
@@ -142,10 +156,14 @@ class InputParser:
         '''
         Applies the appopriate read subroutine to each block
         '''
+ 
         for key in self.blocks.keys():
             entry = self.blocks[key]
-            apply = self.subroutine[f"{key.upper()}_subroutine"]
-            entry = apply(entry)
+            if key+'_subroutine' in self.subroutine.keys():
+                apply = self.subroutine[f"{key.upper()}_subroutine"]
+                entry = apply(entry)
+            else: 
+                print(f"{key} block has no support yet. Skipping ...")
 
     def SubroutineManager(self):
         '''
@@ -161,7 +179,7 @@ class InputParser:
 
                 # The following are the EXACT syntax naming in 
                 _cps = [line.split()[:3] for line in lines]
-                entry['input']['cps'] = np.array(_cps, dtype=float)
+                entry['input']['cps'] = Bohr*np.array(_cps, dtype=float)
                 _iwei = [line.split()[3] for line in lines] 
                 entry['input']['iwei'] = _iwei
                 _imdtyp = [line.split()[4] for line in lines] 
@@ -180,9 +198,21 @@ class InputParser:
             # take the list of lines
             print("ATOMIC SPECIES WAS RUN")
 
+        def CELL_subroutine(entry):
+            _vector = [line.split() for line in entry['input'] ]
+            entry['input'] = Bohr*np.array(_vector, dtype=float)
+            return entry
+            
+            
         self.subroutine = {
             'ATOMIC_COORDINATES_subroutine': ATOMIC_COORDINATES_subroutine,
             'ATOMIC_SPECIES_subroutine': ATOMIC_SPECIES_subroutine,
+            'CELL_subroutine': CELL_subroutine,
         }
 
+    def ASECall(self):
+        self.positions = self.blocks['ATOMIC_COORDINATES']['input']['cps']
+        self.cell = self.blocks['CELL']['input']
         
+        
+    # def ErrorCheck(self):
