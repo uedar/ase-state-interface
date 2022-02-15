@@ -1,8 +1,10 @@
 import re
 from ase import Atoms
 import warnings
+from nbformat import ValidationError
 import numpy as np
 from ase.units import Hartree, Bohr
+from ase.geometry.cell import cellpar_to_cell
 
 force_unit = Hartree/Bohr
 
@@ -20,10 +22,8 @@ def read_state_input(input_file):
         r'(?<=&ATOMIC_SPECIES)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
     atomic_species = [c.split() for c in atomic_species_str.split('\n')]
 
-    cell_str = re.search(r'(?<=&CELL)(.+?\n)(?=&END)',
-                         file, flags=re.DOTALL).group().strip()
-    cell = Bohr*np.array([c.split()
-                         for c in cell_str.split('\n')], dtype=float)
+    cell_str = re.search(r'(?<=&CELL)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
+    cell = Bohr*np.array([c.split() for c in cell_str.split('\n')], dtype=float)
     print("CELL \n", cell, "\n\n")
     
     
@@ -136,7 +136,7 @@ class InputParser:
             if linestr.startswith('&END'):
                 # Finalize block dictionary entry
                 self.blocks[blkname] = {'opt': blkopt.upper() if blkopt is not None else blkopt, 'input': blkinp}
-                print(self.blocks[blkname])
+                # print(self.blocks[blkname])
 
             if linestr.startswith('&'):
                 # Process first line of a block for name and option(if available)
@@ -147,7 +147,7 @@ class InputParser:
                 # For Blocks with additional options (ex. &COORDINATE + CRYSTAL)
                 if len(parts) == 2:
                     blkopt = parts[1]
-                print(parts, '...', blkname, '...', blkopt)
+                # print(parts, '...', blkname, '...', blkopt)
 
             else:
                 blkinp.append(line)
@@ -190,7 +190,7 @@ class InputParser:
                 return entry
             
             else: 
-                raise ValueError(f"BLOCK OPTION ERROR: No support found for ATOMIC_COORDINATE option = '{entry['opt']}'")
+                raise ValueError(f"No support found for ATOMIC_COORDINATE option = '{entry['opt']}'")
                 
             
 
@@ -212,7 +212,30 @@ class InputParser:
 
     def ASECall(self):
         self.positions = self.blocks['ATOMIC_COORDINATES']['input']['cps']
-        self.cell = self.blocks['CELL']['input']
+        
+        if 'CELL' in self.variables.keys():
+            parts = self.variables['CELL']
+            abc = (Bohr*np.array(parts[:3], dtype=float)).tolist()
+            angles = np.array(parts[3:], dtype=float).tolist()
+            cellpar = abc + angles
+            self.cell = cellpar_to_cell(cellpar)
+        else:
+            self.cell = self.blocks['CELL']['input']
         
         
-    # def ErrorCheck(self):
+    def ErrorCheck(self):
+        
+        #CELL Block & CELL Variable incomptibility
+        if 'CELL' in self.variables.keys() and 'CELL' in self.blocks.keys():
+            raise ValidationError("Simultaneous declaration of CELL in Block and variable is not allowed. ")
+        
+        
+        # Hard input requisite
+        #CELL not declared
+        if 'CELL' not in list(self.variables.keys()) + list(self.blocks.keys()):
+            raise ValidationError("CELL is not declared.")
+        
+        # ATOMIC_COORDINATES not declared
+        if 'ATOMIC_COORDINATES' not in list(self.variables.keys()) + list(self.blocks.keys()):
+            raise ValidationError("ATOMIC_COORDINATES is not declared.")
+        
