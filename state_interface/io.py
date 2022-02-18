@@ -9,7 +9,6 @@ force_unit = Hartree/Bohr
 
 
 def read_state_input(input_file):
-    # file = open(input_file, 'r').read()
     # USE PARSER to get information
     input = InputParser(input_file)
     input.InitParse()
