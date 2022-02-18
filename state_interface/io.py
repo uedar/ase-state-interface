@@ -5,6 +5,7 @@ from nbformat import ValidationError
 import numpy as np
 from ase.units import Hartree, Bohr
 from ase.geometry.cell import cellpar_to_cell
+import sys
 
 force_unit = Hartree/Bohr
 
@@ -18,28 +19,70 @@ def read_state_input(input_file):
     # positions = input.blocks[ATOMIC_COORDINATES]['input']['cps']
     # cell = input.blocks['CELL']['input']
 
-    atomic_species_str = re.search(
-        r'(?<=&ATOMIC_SPECIES)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
-    atomic_species = [c.split() for c in atomic_species_str.split('\n')]
-
-    cell_str = re.search(r'(?<=&CELL)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
-    cell = Bohr*np.array([c.split() for c in cell_str.split('\n')], dtype=float)
-    print("CELL \n", cell, "\n\n")
+    input = InputParser(input_file)
+    input.InitParse()
+    
+    kwargs = {}
+    
+    # Load atomic coordinate (cartesian/crystal) to kwargs
+    pos_opt = input.blocks['ATOMIC_COORDINATES']['opt']
+    if  pos_opt in [None, 'CART', 'CARTESIAN']:
+        pos = Bohr * input.blocks['ATOMIC_COORDINATES']['input']['cps']
+        kwargs['positions'] = pos
+    elif pos_opt in ['CRYSTAL','CRYS']:
+        print(input.blocks['ATOMIC_COORDINATES']['input']['cps'])
+        pos = input.blocks['ATOMIC_COORDINATES']['input']['cps']
+        kwargs['scaled_positions'] = pos
+    else:
+        raise ValueError(f"Invalid atomic coordinate option = {pos_opt}.")
+        
+    # Load cell information 
+    if 'CELL' in list(input.variables.keys()):
+        clist = list(map(float, input.variables['CELL'])) 
+        lena, lenb, lenc = Bohr*clist[0], Bohr*clist[1], Bohr*clist[2]
+        angbc, angac, angab = clist[3], clist[4], clist[5]
+        kwargs['cell'] = [lena, lenb, lenc, angbc, angac, angab]
+    elif 'CELL' in list(input.blocks.keys()):
+        cell_matrix = input.blocks['CELL']['input']
+        kwargs['cell'] = Bohr * cell_matrix
+    else:
+        raise ValueError(f"Cell information not found.")
+        
+    # Load Atomic species
+    species = input.blocks['ATOMIC_SPECIES']['input']['symbol']
+    ityp = input.blocks['ATOMIC_COORDINATES']['input']['ityp']
+    symlist = [species[int(i)-1] for i in ityp]
+    kwargs['symbols'] = symlist
     
     
-    coord_str = re.search(r'(?<=&ATOMIC_COORDINATES CARTESIAN)(.+?\n)(?=&END)',
-                          file, flags=re.DOTALL).group().strip()
-    coord = [c.split() for c in coord_str.split('\n')]
-    positions = Bohr*np.array([c[:3] for c in coord], dtype=float)
-    print("POSITION \n", positions, "\n\n")
+    print(kwargs)
+    # Initiate ASE Atoms module
+    structure = Atoms(**kwargs)
+    
+    
 
-    species_idx = {lst[0]: i+1 for i, lst in enumerate(atomic_species)}
-    print('species_idx', species_idx)
-    symbols = [k for k, v in species_idx.items()
-               for c in coord if int(c[5]) == v]
-    print('symboles', symbols)
-    structure = Atoms(symbols=symbols, positions=positions, cell=cell)
-    print(structure)
+    # atomic_species_str = re.search(
+    #     r'(?<=&ATOMIC_SPECIES)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
+    # atomic_species = [c.split() for c in atomic_species_str.split('\n')]
+
+    # cell_str = re.search(r'(?<=&CELL)(.+?\n)(?=&END)', file, flags=re.DOTALL).group().strip()
+    # cell = Bohr*np.array([c.split() for c in cell_str.split('\n')], dtype=float)
+    # print("CELL \n", cell, "\n\n")
+    
+    
+    # coord_str = re.search(r'(?<=&ATOMIC_COORDINATES CARTESIAN)(.+?\n)(?=&END)',
+    #                       file, flags=re.DOTALL).group().strip()
+    # coord = [c.split() for c in coord_str.split('\n')]
+    # positions = Bohr*np.array([c[:3] for c in coord], dtype=float)
+    # print("POSITION \n", positions, "\n\n")
+
+    # species_idx = {lst[0]: i+1 for i, lst in enumerate(atomic_species)}
+    # print('species_idx', species_idx)
+    # symbols = [k for k, v in species_idx.items()
+    #            for c in coord if int(c[5]) == v]
+    # print('symbols', symbols)
+    # structure = Atoms(symbols=symbols, positions=positions, cell=cell)
+    # print(structure)
     return structure
 
 
@@ -90,9 +133,13 @@ class InputParser:
         self.CatchVariable()
         self.CatchBlock()
         self.SubroutineManager()
-        self.ReadBlock()
         self.ErrorCheck()
-        self.ASECall()
+        self.ReadBlock()
+        # self.ASECall()
+        
+    def Show(self):
+        print("VARIABLE \n", self.variables)
+        print("BLOCK \n", self.blocks)
 
     def VarBlock(self):
         '''
@@ -153,74 +200,86 @@ class InputParser:
                 blkinp.append(line)
 
     def ReadBlock(self):
-        '''
-        Applies the appopriate read subroutine to each block
-        '''
- 
+        # Applies the appopriate read subroutine to each block
         for key in self.blocks.keys():
-            entry = self.blocks[key]
-            if key+'_subroutine' in self.subroutine.keys():
-                apply = self.subroutine[f"{key.upper()}_subroutine"]
-                entry = apply(entry)
-            else: 
-                print(f"{key} block has no support yet. Skipping ...")
+            if key+'_read' in self.subroutine.keys():
+                self.subroutine[f"{key.upper()}_read"]()
+        
+        # self.subroutine['ATOMIC_COORDINATES_read']()
+        # self.subroutine['CELL_read']()
+        # self.subroutine['ATOMIC_SPECIES_read']()
+        
+        # for key in self.blocks.keys():
+        #     if key+'_read' in self.subroutine.keys():
+        #         self.subroutine[f"{key.upper()}_read"]
+        #         # apply = self.subroutine[f"{key.upper()}_read"]
+        #         # entry = apply(entry)
+        #     else: 
+        #         print(f"{key} block has no support yet. Skipping ...")
 
     def SubroutineManager(self):
         '''
         Scalable reader for specific input blocks
+        No interpretation of input done. 
         '''
+        def ATOMIC_COORDINATES_read():           
+            entry = self.blocks['ATOMIC_COORDINATES']
+            lines = entry['input'].copy()
+            entry['input'] = dict()
+            # The following are the EXACT syntax naming in 
+            _cps = [line.split()[:3] for line in lines]
+            entry['input']['cps'] = np.array(_cps, dtype=float)
+            _iwei = [line.split()[3] for line in lines] 
+            entry['input']['iwei'] = _iwei
+            _imdtyp = [line.split()[4] for line in lines] 
+            entry['input']['imdtyp'] = _imdtyp
+            _ityp = [line.split()[5] for line in lines] 
+            entry['input']['ityp'] = _ityp
 
-        def ATOMIC_COORDINATES_subroutine(entry):
-            # Takes the dictionary entry for ATOMIC_COORDINATES
-            if entry['opt'] in [None, 'CARTESIAN', 'CART']:
+        def ATOMIC_SPECIES_read():   
+            entry = self.blocks['ATOMIC_SPECIES']
+            lines = entry['input'].copy()
+            entry['input'] = dict()
+            _symbol, _mass, _file = [], [], []
+            for line in lines:
+                # For the moment atomic number is not supported 
+                _symbol.append(line.split()[0])
+                _mass.append(line.split()[1])
+                _file.append(line.split()[2])
                 
-                lines = entry['input'].copy()
-                entry['input'] = dict()
+            entry['input']['symbol'] = _symbol
+            entry['input']['mass'] = _mass
+            entry['input']['file'] = _file
+       
 
-                # The following are the EXACT syntax naming in 
-                _cps = [line.split()[:3] for line in lines]
-                entry['input']['cps'] = Bohr*np.array(_cps, dtype=float)
-                _iwei = [line.split()[3] for line in lines] 
-                entry['input']['iwei'] = _iwei
-                _imdtyp = [line.split()[4] for line in lines] 
-                entry['input']['imdtyp'] = _imdtyp
-                _ityp = [line.split()[5] for line in lines] 
-                entry['input']['ityp'] = _ityp
-                
-                return entry
-            
-            else: 
-                raise ValueError(f"No support found for ATOMIC_COORDINATE option = '{entry['opt']}'")
-                
-            
-
-        def ATOMIC_SPECIES_subroutine(entry):
-            # take the list of lines
-            print("ATOMIC SPECIES WAS RUN")
-
-        def CELL_subroutine(entry):
+        def CELL_read():
+            entry = self.blocks['CELL']
             _vector = [line.split() for line in entry['input'] ]
-            entry['input'] = Bohr*np.array(_vector, dtype=float)
-            return entry
-            
+            entry['input'] = np.array(_vector, dtype=float)
             
         self.subroutine = {
-            'ATOMIC_COORDINATES_subroutine': ATOMIC_COORDINATES_subroutine,
-            'ATOMIC_SPECIES_subroutine': ATOMIC_SPECIES_subroutine,
-            'CELL_subroutine': CELL_subroutine,
+            'ATOMIC_COORDINATES_read': ATOMIC_COORDINATES_read,
+            'ATOMIC_SPECIES_read': ATOMIC_SPECIES_read,
+            'CELL_read': CELL_read,
         }
 
-    def ASECall(self):
-        self.positions = self.blocks['ATOMIC_COORDINATES']['input']['cps']
+    # def ASECall(self):
+    #     # Simplify calling variables for ASE usage
         
-        if 'CELL' in self.variables.keys():
-            parts = self.variables['CELL']
-            abc = (Bohr*np.array(parts[:3], dtype=float)).tolist()
-            angles = np.array(parts[3:], dtype=float).tolist()
-            cellpar = abc + angles
-            self.cell = cellpar_to_cell(cellpar)
-        else:
-            self.cell = self.blocks['CELL']['input']
+        
+        
+        
+    #     self.positions = self.blocks['ATOMIC_COORDINATES']['input']['cps']
+        
+    #     if 'CELL' in self.variables.keys():
+    #         parts = self.variables['CELL']
+    #         abc = (Bohr*np.array(parts[:3], dtype=float)).tolist()
+    #         angles = np.array(parts[3:], dtype=float).tolist()
+    #         cellpar = abc + angles
+    #         self.cell = cellpar_to_cell(cellpar)
+    #     else:
+    #         self.cell = self.blocks['CELL']['input']
+        
         
         
     def ErrorCheck(self):
@@ -229,13 +288,8 @@ class InputParser:
         if 'CELL' in self.variables.keys() and 'CELL' in self.blocks.keys():
             raise ValidationError("Simultaneous declaration of CELL in Block and variable is not allowed. ")
         
-        
-        # Hard input requisite
-        #CELL not declared
-        if 'CELL' not in list(self.variables.keys()) + list(self.blocks.keys()):
-            raise ValidationError("CELL is not declared.")
-        
+        # HARD REQUIREMENTS
         # ATOMIC_COORDINATES not declared
-        if 'ATOMIC_COORDINATES' not in list(self.variables.keys()) + list(self.blocks.keys()):
+        if 'ATOMIC_COORDINATES' not in list(self.blocks.keys()):
             raise ValidationError("ATOMIC_COORDINATES is not declared.")
         
