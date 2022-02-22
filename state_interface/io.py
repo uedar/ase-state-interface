@@ -166,8 +166,8 @@ class InputParser:
             elif linestr.startswith('&END'):
                 # Finalize block dictionary entry
                 if blkopt:
-                    _opt = blkopt.upper()
-                self.blocks[blkname] = {'opt': _opt, 'input': blkinp}
+                    blkopt = blkopt.upper()
+                self.blocks[blkname] = {'opt': blkopt, 'input': blkinp}
 
             else:
                 blkinp.append(line)
