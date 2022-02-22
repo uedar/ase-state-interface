@@ -5,7 +5,7 @@ description = "ASE STATE interface"
 authors = ["Harry <harry@cp.prec.eng.osaka-u.ac.jp>", "Ueda <ueda@cp.prec.eng.osaka-u.ac.jp>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 ase = "^3.22"
 
 [tool.poetry.dev-dependencies]
