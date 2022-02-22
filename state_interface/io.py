@@ -8,7 +8,14 @@ force_unit = Hartree/Bohr
 
 
 def read_state_input(input_file):
+    """ASE module to read STATE input files.
 
+    Args:
+        input_file (file-like object or str): Points to the STATE input file
+
+    Returns:
+        object: Object based on ASE's atoms module using the read input.
+    """
     # USE PARSER to get information
     info = InputParser(input_file)
     info.parse()
@@ -33,8 +40,7 @@ def read_state_input(input_file):
         clist = [float(cnum) for cnum in info.variables['CELL']]
         # Converted lattice lengths
         lena, lenb, lenc = Bohr*clist[0], Bohr*clist[1], Bohr*clist[2]
-        angbc, angac, angab = clist[3], clist[4], clist[5]
-        kwargs['cell'] = [lena, lenb, lenc, angbc, angac, angab]
+        kwargs['cell'] = [lena, lenb, lenc, clist[3], clist[4], clist[5]]
     elif 'CELL' in list(info.blocks.keys()):
         cell_matrix = info.blocks['CELL']['input']
         # Converted cell matrix
@@ -85,12 +91,10 @@ def read_state_output(output_file):
 
 
 class InputParser:
-    '''
-    Conducts Full parsing of all inputs in file.
-    Used to output a dictionary containing all variables and block inputs.
-    Interpretation of inputs are not done here.
-    '''
+    """Fully parse all input parameters in file."""
+
     def __init__(self, file_object):
+        """Intialize the class."""
         self.file_object = file_object
         self.info = dict()
         # Initialize class attributes
@@ -101,6 +105,7 @@ class InputParser:
         self.subroutine = None
 
     def parse(self):
+        """Launch parsing procedure."""
         self.varblock()
         self.catchvariable()
         self.catchblock()
@@ -109,14 +114,12 @@ class InputParser:
         self.readblock()
 
     def show(self):
-        # Shows the main component of the parsed stuff.
+        """Show the variable and block component of the parsed file."""
         print("VARIABLE \n", self.variables)
         print("BLOCK \n", self.blocks)
 
     def varblock(self):
-        '''
-        Remove comments, captures info variable and block inputs separately
-        '''
+        """Read and clean input file, and separate variable and block lines."""
         with open(self.file_object, 'r') as f:
             lines = f.read().splitlines()
 
@@ -137,7 +140,7 @@ class InputParser:
         self.blklines = lines[blkstart_idx:]
 
     def catchvariable(self):
-        # Process the variable lines to a dictionary
+        """Create a dictionary from variable lines."""
         self.variables = dict()
         for line in self.varlines:
             parts = line.split()
@@ -145,9 +148,7 @@ class InputParser:
             self.variables[varname] = [x.upper() for x in parts[1:]]
 
     def catchblock(self):
-        # Process block lines to a dictionary
-        # Parsing only separates blocks into dictionary
-        # Needs specific block reader (provided by manager)
+        """Create a dictionary from block lines (not specific)."""
         self.blocks = dict()
         for line in self.blklines:
             linestr = line.upper()
@@ -173,17 +174,15 @@ class InputParser:
                 blkinp.append(line)
 
     def readblock(self):
+        """Further process the block dictionary using specific subroutines."""
         # Applies the appopriate read subroutine to each block
-        for key in self.blocks.keys():
-            if key in self.subroutine.keys():
+        for key in self.blocks:
+            if key.upper() in self.subroutine:
                 self.subroutine[key.upper()]()
 
 
     def manager(self):
-        '''
-        Scalable reader for specific info blocks
-        No interpretation of info done.
-        '''
+        """Define the subroutine that further processes the block dictionary."""
         def atomic_coordinates_read():
             entry = self.blocks['ATOMIC_COORDINATES']
             lines = entry['input'].copy()
@@ -225,7 +224,7 @@ class InputParser:
         }
 
     def errorcheck(self):
-
+        """Error definition and check of code breaking circumstances."""
         # CELL Block & CELL Variable incomptibility
         if 'CELL' in self.variables.keys() and 'CELL' in self.blocks.keys():
             raise ValueError("Double CELL declaration in block and variable.")
