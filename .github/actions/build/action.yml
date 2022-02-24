@@ -1,7 +1,4 @@
-inputs:
-  name:
-    description: 'Setup Python'
-  runs:
+runs:
   using: "composite"
   steps:
     - name: Set up Python environment
