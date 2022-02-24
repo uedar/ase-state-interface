@@ -5,8 +5,10 @@ description = "ASE STATE interface"
 authors = ["Harry <harry@cp.prec.eng.osaka-u.ac.jp>", "Ueda <ueda@cp.prec.eng.osaka-u.ac.jp>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = ">=3.6.2,<3.7"
 ase = "^3.22"
+flake8 = "^4.0.1"
+pylint = "^2.12.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
