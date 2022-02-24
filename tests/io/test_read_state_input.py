@@ -1,3 +1,4 @@
+"""This is a test of state-interface/io.read_state_input"""
 import os
 from state_interface.io import read_state_input
 
