@@ -24,7 +24,7 @@ jobs:
         uses: ./.github/actions/build
       - name: Setup pylint
         run: |
-          pylint --generate-rcfile > ~/.pylintrc
+          poetry run pylint --generate-rcfile > ~/.pylintrc
           echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
       - name: Setup reviewdog
         run: |
@@ -34,7 +34,7 @@ jobs:
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pylint --rcfile=~/.pylintrc $(git ls-files '*.py') | reviewdog -efm="%f:%l:%c: %m" -reporter=github-pr-review -fail-on-error=true -diff="git diff FETCH_HEAD"
+          poetry run pylint --rcfile=~/.pylintrc $(git ls-files '*.py') | reviewdog -efm="%f:%l:%c: %m" -reporter=github-pr-review -fail-on-error=true -diff="git diff FETCH_HEAD"
 
   flake8-lint:
     runs-on: ubuntu-latest
