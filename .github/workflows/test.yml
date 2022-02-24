@@ -6,7 +6,6 @@ jobs:
   pytest:
     runs-on: ubuntu-latest
     name: pytest
-    needs: setup
     steps:
       - name: Check out source repository
         uses: actions/checkout@v2
@@ -18,7 +17,6 @@ jobs:
   pylint:
     runs-on: ubuntu-latest
     name: pylint
-    needs: setup
     steps: 
       - name: Check out source repository
         uses: actions/checkout@v2
@@ -41,7 +39,6 @@ jobs:
   flake8-lint:
     runs-on: ubuntu-latest
     name: flake8
-    needs: setup
     steps:
       - name: Check out source repository
         uses: actions/checkout@v2
