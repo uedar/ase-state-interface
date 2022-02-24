@@ -3,29 +3,15 @@ name: reviewdog
 on: [pull_request]
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    name: setup
-    steps:
-      - name: Check out source repository
-        uses: actions/checkout@v2
-      - name: Set up Python environment
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.6"
-      - name: Install Poetry
-        run: |
-          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-      - name: Add path for Poetry
-        run: echo "$HOME/.poetry/bin" >> $GITHUB_PATH
-      - name: Install Dependencies
-        run: poetry install --no-interaction
-
   pytest:
     runs-on: ubuntu-latest
     name: pytest
     needs: setup
     steps:
+      - name: Check out source repository
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: ./.github/workflows
       - name: Run Tests
         run: poetry run pytest tests
 
@@ -34,6 +20,10 @@ jobs:
     name: pylint
     needs: setup
     steps: 
+      - name: Check out source repository
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: ./.github/workflows
       - name: Setup pylint
         run: |
           pylint --generate-rcfile > ~/.pylintrc
@@ -53,6 +43,12 @@ jobs:
     name: flake8
     needs: setup
     steps:
+      - name: Check out source repository
+        uses: actions/checkout@v2
+      - name: Set up Python environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.6"
       - name: flake8 Lint
         uses: reviewdog/action-flake8@v3
         with:
