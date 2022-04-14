@@ -68,27 +68,31 @@ def read_state_output(output_file):
         for line in lines:
             if re.search('CONVERGED', line):
                 extract = True
+                count_empty_line = 0
             if extract:
                 data.append(line.split())
-                if re.search('EXIT', line):
+                if (len(line.split()) == 0):
+                    count_empty_line += 1
+                if (count_empty_line == 2):
                     extract = False
-    energy, f_max, f_rms = Hartree * \
-        float(data[2][1]), force_unit * \
-        float(data[2][2]), force_unit*float(data[2][3])
-    force_data = []
-    positions = []
-    species = []
-    for line in data[6:]:
-        if line == []:
-            break
-        species.append(line[2])
-        positions.append(line[3:6])
-        force_data.append(line[6:9])
-    positions = Bohr*np.array(positions, dtype=float)
-    structure = Atoms(symbols=species, positions=positions)
-    forces = force_unit*np.array(force_data, dtype=float)
+            if (extract == False and len(data) != 0):
+                energy, f_max, f_rms = Hartree * \
+                                       float(data[2][1]), force_unit * \
+                                       float(data[2][2]), force_unit*float(data[2][3])
+                force_data = []
+                positions = []
+                species = []
+                for vip_line in data[6:]:
+                    if vip_line == []:
+                        break
+                    species.append(vip_line[2])
+                    positions.append(vip_line[3:6])
+                    force_data.append(vip_line[6:9])
+                positions = Bohr*np.array(positions, dtype=float)
+                structure = Atoms(symbols=species, positions=positions)
+                forces = force_unit*np.array(force_data, dtype=float)
+                data = []
     return structure, energy, forces
-
 
 class InputParser:
     """Fully parse all input parameters in file."""
