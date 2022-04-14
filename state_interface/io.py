@@ -71,14 +71,14 @@ def read_state_output(output_file):
                 count_empty_line = 0
             if extract:
                 data.append(line.split())
-                if (len(line.split()) == 0):
+                if len(line.split()) == 0:
                     count_empty_line += 1
-                if (count_empty_line == 2):
+                if count_empty_line == 2:
                     extract = False
             if (extract is False and len(data) != 0):
-                energy, f_max, f_rms = Hartree * \
-                                       float(data[2][1]), force_unit * \
-                                       float(data[2][2]), force_unit*float(data[2][3])
+                energy = Hartree * float(data[2][1])
+#                f_max      = force_unit * float(data[2][2])
+#                f_rms      = force_unit * float(data[2][3])
                 force_data = []
                 positions = []
                 species = []
