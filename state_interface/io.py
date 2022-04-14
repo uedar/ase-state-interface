@@ -75,7 +75,7 @@ def read_state_output(output_file):
                     count_empty_line += 1
                 if (count_empty_line == 2):
                     extract = False
-            if (extract == False and len(data) != 0):
+            if (extract is False and len(data) != 0):
                 energy, f_max, f_rms = Hartree * \
                                        float(data[2][1]), force_unit * \
                                        float(data[2][2]), force_unit*float(data[2][3])
