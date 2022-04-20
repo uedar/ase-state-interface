@@ -69,6 +69,7 @@ class STATE(FileIOCalculator):
                 print("{: >18.12f}".format(line[0]),\
                       "{: >18.12f}".format(line[1]),\
                       "{: >18.12f}".format(line[2]),\
+                      1, imdtyp ,pseudo_idx[cs], file=fd)
             print ("&END", file = fd)
             if 'VDW-DF' in input_data:
                 print('&VDW-DF', file = fd)
