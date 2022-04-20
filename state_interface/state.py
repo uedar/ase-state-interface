@@ -79,10 +79,13 @@ class STATE(FileIOCalculator):
         
         self.calc = calc
         self.results = calc.results
-        self.results['updt_pos'] = structure
+        self.results['updt_pos'] = structure.get_positions()
 
     def get_stress(self, atoms):
         return np.zeros((3,3))
+
+    def get_updt_pos(self):
+        return self.results['updt_pos']
 
 def write_parameter(parameter,input_json, file):
     if parameter == 'KPOINT_MESH':
