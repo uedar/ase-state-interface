@@ -79,6 +79,7 @@ class STATE(FileIOCalculator):
         
         self.calc = calc
         self.results = calc.results
+        self.results['updt_pos'] = structure
 
     def get_stress(self, atoms):
         return np.zeros((3,3))
