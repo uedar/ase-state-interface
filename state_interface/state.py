@@ -42,6 +42,7 @@ class STATE(FileIOCalculator):
         atomic_nums = atoms.get_atomic_numbers()
         ntyp    = len(species)
         cell     = atoms.get_cell() * 1 / Bohr
+        constraints = atoms.constraints
         with open (self.label + '.in', 'w') as fd:
             input_data = self.parameters['input_data']
             print ("#\n#\n#", file = fd)
@@ -53,8 +54,8 @@ class STATE(FileIOCalculator):
             for cell_vector in cell:
                 print("{: >18.12f}".format(cell_vector[0]),
                        "{: >18.12f}".format(cell_vector[1]),
-                       "{: >18.12f}".format(cell_vector[2]), file = fd)
-            print("&END", file = fd)
+                       "{: >18.12f}".format(cell_vector[2]),file=fd)
+            print("&END",file=fd)
             print("&ATOMIC_SPECIES", file = fd)
             for line in input_data['PSEUDOS']:
                 print(*line, file = fd)
@@ -65,12 +66,12 @@ class STATE(FileIOCalculator):
             substrate_set = get_substrate_set(substrate_idx)
             for i,line in enumerate(coords):
                 cs = chemical_symbols[atomic_nums[i]]
-                imdtyp = 0 if i+1 in substrate_set else 1
+                imdtyp = 0 if i in constraints[0].get_indices() else 1
                 print("{: >18.12f}".format(line[0]),
                       "{: >18.12f}".format(line[1]),
                       "{: >18.12f}".format(line[2]),
-                      1, imdtyp, pseudo_idx[cs], file=fd)
-            print ("&END", file = fd)
+                      1, imdtyp, pseudo_idx[cs],file=fd)
+            print("&END",file=fd)
             if 'VDW-DF' in input_data:
                 print('&VDW-DF', file = fd)
                 print("QCUT",  input_data['VDW-DF']['QCUT'], file = fd)
