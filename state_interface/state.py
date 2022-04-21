@@ -51,8 +51,10 @@ class STATE(FileIOCalculator):
                 write_parameter(parameter, input_json=input_data,file=fd)
             print ("&CELL", file = fd)
             for cell_vector in cell:
-                print (*cell_vector, file = fd)
-            print ("&END", file = fd)
+                print("{: >18.12f}".format(cell_vector[0]),
+                       "{: >18.12f}".format(cell_vector[1]),
+                       "{: >18.12f}".format(cell_vector[2]), file = fd)
+            print("&END", file = fd)
             print("&ATOMIC_SPECIES", file = fd)
             for line in input_data['PSEUDOS']:
                 print(*line, file = fd)
@@ -64,7 +66,10 @@ class STATE(FileIOCalculator):
             for i,line in enumerate(coords):
                 cs = chemical_symbols[atomic_nums[i]]
                 imdtyp = 0 if i+1 in substrate_set else 1
-                print(*line, 1, imdtyp ,pseudo_idx[cs], file=fd)
+                print("{: >18.12f}".format(line[0]),
+                      "{: >18.12f}".format(line[1]),
+                      "{: >18.12f}".format(line[2]),
+                      1, imdtyp, pseudo_idx[cs], file=fd)
             print ("&END", file = fd)
             if 'VDW-DF' in input_data:
                 print('&VDW-DF', file = fd)

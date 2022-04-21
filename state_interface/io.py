@@ -85,6 +85,8 @@ def read_state_output(output_file):
                 for vip_line in data[6:]:
                     if vip_line == []:
                         break
+                    elif (vip_line[0] != 'MD:'):
+                        break
                     species.append(vip_line[2])
                     positions.append(vip_line[3:6])
                     force_data.append(vip_line[6:9])
