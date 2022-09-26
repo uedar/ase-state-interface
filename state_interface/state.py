@@ -64,9 +64,10 @@ class STATE(FileIOCalculator):
             pseudo_idx = {lst[0]: i+1 for i, lst in enumerate(input_data['PSEUDOS'])}
             substrate_idx = input_data['SUBSTRATE_IDX'] if 'SUBSTRATE_IDX' in input_data else []
             substrate_set = get_substrate_set(substrate_idx)
+            constraints_idx = constraints[0].get_indices() if len(constraints) > 0 else []
             for i,line in enumerate(coords):
                 cs = chemical_symbols[atomic_nums[i]]
-                imdtyp = 0 if i in constraints[0].get_indices() else 1
+                imdtyp = 0 if i in constraints_idx else 1
                 print("{: >18.12f}".format(line[0]),
                       "{: >18.12f}".format(line[1]),
                       "{: >18.12f}".format(line[2]),
