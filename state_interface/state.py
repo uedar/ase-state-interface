@@ -67,7 +67,9 @@ class STATE(FileIOCalculator):
                 print(*line, file=fd)
             print("&END", file=fd)
             print("&ATOMIC_COORDINATES", "CARTESIAN", file=fd)
-            pseudo_idx = {lst[0]: i + 1 for i, lst in enumerate(input_data["PSEUDOS"])}
+            pseudo_idx = {
+                lst[0]: i + 1 for i, lst in enumerate(input_data["PSEUDOS"])
+            }
 
             constraints_idx = (
                 constraints[0].get_indices() if len(constraints) > 0 else []
@@ -93,7 +95,9 @@ class STATE(FileIOCalculator):
 
     def read_results(self):
         structure, energy, forces = read_state_output(self.label + ".out")
-        calc = SinglePointDFTCalculator(structure, energy=energy, forces=forces)
+        calc = SinglePointDFTCalculator(
+            structure, energy=energy, forces=forces
+        )
 
         self.calc = calc
         self.results = calc.results
