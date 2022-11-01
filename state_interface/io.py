@@ -1,3 +1,6 @@
+"""
+Read strucutures from STATE input files and read results from STATE output files.
+"""
 import re
 import warnings
 import numpy as np
@@ -36,12 +39,12 @@ def read_state_input(input_file):
         raise ValueError(f"Invalid atomic coordinate option = {pos_opt}.")
 
     # Load cell information
-    if "CELL" in list(info.variables.keys()):
+    if "CELL" in list(info.variables):
         clist = [float(cnum) for cnum in info.variables["CELL"]]
         # Converted lattice lengths
         lena, lenb, lenc = Bohr * clist[0], Bohr * clist[1], Bohr * clist[2]
         kwargs["cell"] = [lena, lenb, lenc, clist[3], clist[4], clist[5]]
-    elif "CELL" in list(info.blocks.keys()):
+    elif "CELL" in list(info.blocks):
         cell_matrix = info.blocks["CELL"]["input"]
         # Converted cell matrix
         kwargs["cell"] = Bohr * cell_matrix
@@ -60,10 +63,12 @@ def read_state_input(input_file):
 
 
 def read_state_output(output_file):
+    """ASE module to read STATE output files."""
+
     data = []
     extract = False
-    with open(output_file) as fd:
-        lines = fd.readlines()
+    with open(output_file, encoding="utf-8") as file:
+        lines = file.readlines()
         if "The calculation has converged" not in str(lines):
             warnings.warn("The calculation has not converged")
         for line in lines:
@@ -128,8 +133,8 @@ class InputParser:
 
     def varblock(self):
         """Read and clean input file, and separate variable and block lines."""
-        with open(self.file_object, "r") as f:
-            lines = f.read().splitlines()
+        with open(self.file_object, "r", encoding="utf-8") as file:
+            lines = file.read().splitlines()
 
         # Clean comments and trailing spaces
         clean = []
@@ -234,9 +239,9 @@ class InputParser:
     def errorcheck(self):
         """Error definition and check of code breaking circumstances."""
         # CELL Block & CELL Variable incomptibility
-        if "CELL" in self.variables.keys() and "CELL" in self.blocks.keys():
+        if "CELL" in self.variables and "CELL" in self.blocks:
             raise ValueError("Double CELL declaration in block and variable.")
 
         # ATOMIC_COORDINATES not declared
-        if "ATOMIC_COORDINATES" not in list(self.blocks.keys()):
+        if "ATOMIC_COORDINATES" not in list(self.blocks):
             raise ValueError("ATOMIC_COORDINATES is not declared.")
