@@ -1,5 +1,6 @@
 """
-Read strucutures from STATE input files and read results from STATE output files.
+Read strucutures from STATE input files
+and read results from STATE output files.
 """
 import re
 import warnings
@@ -91,7 +92,7 @@ def read_state_output(output_file):
                 for vip_line in data[6:]:
                     if vip_line == []:
                         break
-                    elif vip_line[0] != "MD:":
+                    if vip_line[0] != "MD:":
                         break
                     species.append(vip_line[2])
                     positions.append(vip_line[3:6])
@@ -199,7 +200,7 @@ class InputParser:
         def atomic_coordinates_read():
             entry = self.blocks["ATOMIC_COORDINATES"]
             lines = entry["input"].copy()
-            entry["input"] = dict()
+            entry["input"] = {}
             # The following are the EXACT syntax naming in
             _cps = [line.split()[:3] for line in lines]
             entry["input"]["cps"] = np.array(_cps, dtype=float)
@@ -213,7 +214,7 @@ class InputParser:
         def atomic_species_read():
             entry = self.blocks["ATOMIC_SPECIES"]
             lines = entry["input"].copy()
-            entry["input"] = dict()
+            entry["input"] = {}
             _symbol, _mass, _file = [], [], []
             for line in lines:
                 # For the moment atomic number is not supported
