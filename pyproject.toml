@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "state-interface"
-version = "0.1.0"
+version = "1.0.0"
 description = "ASE STATE interface"
-authors = ["Harry <harry@cp.prec.eng.osaka-u.ac.jp>", "Ueda <ueda@cp.prec.eng.osaka-u.ac.jp>"]
+authors = ["Harry Handoko HALIM <harry@cp.prec.eng.osaka-u.ac.jp>", "Kurt Irvin Medina ROJAS <krojas@cp.prec.eng.osaka-u.ac.jp>", "Ryo UEDA <u483198f@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.6.2"
