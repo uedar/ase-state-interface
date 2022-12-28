@@ -1,18 +1,3 @@
-[tool.poetry]
-name = "state-interface"
-version = "1.0.0"
-description = "ASE STATE interface"
-authors = ["Harry Handoko HALIM <harry@cp.prec.eng.osaka-u.ac.jp>", "Kurt Irvin Medina ROJAS <krojas@cp.prec.eng.osaka-u.ac.jp>", "Ryo UEDA <u483198f@gmail.com>"]
-
-[tool.poetry.dependencies]
-python = ">=3.6.2"
-ase = "^3.22"
-flake8 = "^4.0.1"
-pylint = "^2.12.2"
-
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["wheel", "setuptools"]
+build-backend = "setuptools.build_meta"
