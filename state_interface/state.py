@@ -8,7 +8,7 @@ from ase.calculators.calculator import FileIOCalculator
 from ase.calculators.singlepoint import SinglePointDFTCalculator
 from ase.data import chemical_symbols
 import numpy as np
-from .io import read_state_output
+from state_interface.io import read_state_output
 
 ERROR_TEMPLATE = (
     'Property "%s" not available. Please try running STATE\n'

@@ -16,9 +16,7 @@ def test_scf():
     output_file = label + ".out"
     pw_loc = "./STATE"
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    # os.environ[
-    #     "ASE_STATE_COMMAND"
-    # ] = f"mpirun -n 1 {pw_loc} < {input_file} > {output_file}"
+
     os.environ["ASE_STATE_COMMAND"] = f"{pw_loc} < {input_file} > {output_file}"
     potential = "pot.He_lda1TM"
     pw_origin = os.environ["STATE_EXECUTE_PATH"]
