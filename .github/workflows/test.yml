@@ -3,39 +3,6 @@ name: test
 on: [pull_request]
 
 jobs:
-  pytest:
-    runs-on: ubuntu-latest
-    name: pytest
-    steps:
-      - name: Check out source repository
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: ./.github/actions/build
-      - name: Run Tests
-        run: poetry run pytest tests
-
-  pylint:
-    runs-on: ubuntu-latest
-    name: pylint
-    steps: 
-      - name: Check out source repository
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: ./.github/actions/build
-      - name: Setup pylint
-        run: |
-          poetry run pylint --generate-rcfile > ~/.pylintrc
-          echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
-      - name: Setup reviewdog
-        run: |
-          mkdir -p $HOME/bin && curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh -s -- -b $HOME/bin
-          echo ::add-path::$HOME/bin
-      - name: Run pylint
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          poetry run pylint --rcfile=~/.pylintrc $(git ls-files '*.py') | reviewdog -efm="%f:%l:%c: %m" -reporter=github-pr-review -fail-on-error=true -diff="git diff FETCH_HEAD"
-
   flake8-lint:
     runs-on: ubuntu-latest
     name: flake8
@@ -45,10 +12,11 @@ jobs:
       - name: Set up Python environment
         uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: flake8 Lint
         uses: reviewdog/action-flake8@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           fail_on_error: true
+          max-line-length: "119"
