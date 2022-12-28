@@ -30,7 +30,8 @@ jobs:
             restore-keys: |
               ${{ runner.os }}-buildx-
 
-        
+        - name: debug
+          run: ls
         - uses: docker/build-push-action@v3
           with:
             push: true
@@ -38,18 +39,18 @@ jobs:
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache-new
             build-args: |
-               "state_src='./state-5.6.10.tgz'"
+               "state_src=state-5.6.10.tgz"
 
-        - name: Move cache
-          run: |
-            rm -rf /tmp/.buildx-cache
-            mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+        # - name: Move cache
+        #   run: |
+        #     rm -rf /tmp/.buildx-cache
+        #     mv /tmp/.buildx-cache-new /tmp/.buildx-cache
         
-        - name: Start docker
-          run: |
-            docker compose up -d
-        - name: Run pytest                                       
-          run: docker compose exec -T state_interface pytest /ase-state-interface
+        # - name: Start docker
+        #   run: |
+        #     docker compose up -d
+        # - name: Run pytest                                       
+        #   run: docker compose exec -T state_interface pytest /ase-state-interface
   flake8-lint:
     runs-on: ubuntu-latest
     name: flake8
