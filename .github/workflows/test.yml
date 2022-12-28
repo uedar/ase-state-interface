@@ -34,12 +34,13 @@ jobs:
           run: pwd
         - uses: docker/build-push-action@v3
           with:
+            context: .
             push: true
             tags: ${{ github.sha }}
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache-new
             build-args: |
-               "state_src=/home/runner/work/ase-state-interface/ase-state-interface/state-5.6.10.tgz"
+               "state_src=state-5.6.10.tgz"
 
         - name: Move cache
           run: |
