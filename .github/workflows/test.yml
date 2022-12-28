@@ -31,14 +31,14 @@ jobs:
               ${{ runner.os }}-buildx-
 
         
-        - uses: docker/build-push-action@v2
-          env: 
-            state_src: ./state-5.6.10.tgz
+        - uses: docker/build-push-action@v3
           with:
             push: true
             tags: ${{ github.sha }}
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache-new
+            build-args: |
+               "state_src=./state-5.6.10.tgz"
 
         - name: Move cache
           run: |
