@@ -18,7 +18,7 @@ def test_scf():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     os.environ["ASE_STATE_COMMAND"] = f"{pw_loc} < {input_file} > {output_file}"
-    pw_origin = "/home/test_user/state-5.6.10/src/STATE"
+    pw_origin = "/state-5.6.10/src/STATE"
     pw_link = os.path.join(os.path.dirname(os.path.abspath(__file__)), "STATE")
     if os.path.exists(pw_link):
         os.remove(pw_link)

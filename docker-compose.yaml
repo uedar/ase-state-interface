@@ -4,9 +4,9 @@ services:
     build: .
     container_name: state_interface
     volumes:
-      - .:/home/test_user/ase-state-interface
+      - .:/ase-state-interface
     tty: true
     stdin_open: true
     environment:
       - OMPI_MCA_btl_vader_single_copy_mechanism=none
-    user: "1000:1000"
+    # user: "1000:1000"
