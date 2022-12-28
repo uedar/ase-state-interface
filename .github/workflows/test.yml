@@ -9,12 +9,7 @@ jobs:
     steps:
         - name: Checkout source repository                                  
           uses: actions/checkout@v2
-        # - name: Login to Docker                                
-        #   uses: docker/login-action@v1
-        #   with:
-        #     registry: ghcr.io
-        #     username: ${{ github.repository_owner }}
-        #     password: ${{ secrets.DOCKER_CONTINER_REGISTRY_TOKEN }}
+
         - name: Download state src
           run: |
             curl -H "Authorization: token ${STATE_SRC_TOKEN} " \
@@ -23,14 +18,34 @@ jobs:
               -L https://api.github.com/repos/uedar/state-private/contents/state-5.6.10.tgz
           env: 
             STATE_SRC_TOKEN: ${{ secrets.STATE_SRC_TOKEN }}
-        - name: Build docker
-          run: |
-            docker compose build
-            docker compose up -d
+
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        - name: Cache Docker layers
+          uses: actions/cache@v2
+          with:
+            path: /tmp/.buildx-cache
+            key: ${{ runner.os }}-buildx-${{ github.sha }}
+        
+        - uses: docker/build-push-action@v2
           env: 
             state_src: ./state-5.6.10.tgz
-        - name: debug
-          run: sudo usermod -a -G docker runner
+          with:
+            push: true
+            tags: ${{ github.sha }}
+            cache-from: type=local,src=/tmp/.buildx-cache
+            cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+        - name: Move cache
+          run: |
+            rm -rf /tmp/.buildx-cache
+            mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+        
+        - name: Start docker
+          run: |
+            docker compose up -d
         - name: Run pytest                                       
           run: docker compose exec -T state_interface pytest /ase-state-interface
   flake8-lint:

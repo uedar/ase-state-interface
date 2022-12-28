@@ -24,12 +24,13 @@ def test_scf():
         os.remove(pw_link)
     os.symlink(pw_origin, pw_link)
     input_data = {
-        "GMAX": 5,
-        "GMAXP": 20,
+        "GMAX": 3,
+        "GMAXP": 15,
         "KPOINT_MESH": [1, 1, 1],
         "KPOINT_SHIFT": ["OFF", "OFF", "OFF"],
         "XCTYPE": "ggapbe",
-        "NEG": 8,
+        "EDELTA": 1.0e-2,
+        "NEG": 4,
         "PSEUDOS": [["He", 4.0, "pot.He_lda1TM"]],
     }
 
