@@ -1,0 +1,13 @@
+version: '3'
+services:
+  state_interface:
+    build: .
+    container_name: state_interface
+    volumes:
+      - .:/home/test_user/ase-state-interface
+    tty: true
+    stdin_open: true
+    environment:
+      - OMPI_MCA_btl_vader_single_copy_mechanism=none
+      - STATE_EXECUTE_PATH=$STATE_EXECUTE_PATH
+      - PSEUDO_DIR=$PSEUDO_DIR
