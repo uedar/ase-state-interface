@@ -9,5 +9,4 @@ services:
     stdin_open: true
     environment:
       - OMPI_MCA_btl_vader_single_copy_mechanism=none
-      - STATE_EXECUTE_PATH=$STATE_EXECUTE_PATH
-      - PSEUDO_DIR=$PSEUDO_DIR
+    user: "1000:1000"

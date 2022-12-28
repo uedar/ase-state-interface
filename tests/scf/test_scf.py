@@ -19,13 +19,13 @@ def test_scf():
 
     os.environ["ASE_STATE_COMMAND"] = f"{pw_loc} < {input_file} > {output_file}"
     potential = "pot.He_lda1TM"
-    pw_origin = os.environ["STATE_EXECUTE_PATH"]
+    pw_origin = "/state-5.6.10/src/STATE"
     pw_link = os.path.join(os.path.dirname(os.path.abspath(__file__)), "STATE")
     if os.path.exists(pw_link):
         os.remove(pw_link)
     os.symlink(pw_origin, pw_link)
 
-    pseudo_origin = os.path.join(os.environ["PSEUDO_DIR"], potential)
+    pseudo_origin = "/gncpp_pack/" + potential
     pseudo_link = os.path.join(os.path.dirname(os.path.abspath(__file__)), potential)
     print(pseudo_link)
     if os.path.exists(pseudo_link):

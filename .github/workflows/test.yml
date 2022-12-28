@@ -3,6 +3,24 @@ name: test
 on: [pull_request]
 
 jobs:
+  pytest:
+    name: pytest
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout source repository                                  
+          uses: actions/checkout@v2
+        - name: Login to Docker                                
+          uses: docker/login-action@v1
+          with:
+            registry: ghcr.io
+            username: ${{ github.repository_owner }}
+            password: ${{ secrets.DOCKER_CONTINER_REGISTRY_TOKEN }}
+        - name: Set up Docker
+          run: |
+            docker pull ghcr.io/uedar/ase-state-interface/state-interface:latest
+            docker compose up -d
+        - name: Run pytest                                       
+          run: docker exec -T state_interface pytest /home/test_user/ase-state-interface
   flake8-lint:
     runs-on: ubuntu-latest
     name: flake8

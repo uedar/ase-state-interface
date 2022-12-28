@@ -3,7 +3,7 @@ import pytest
 import git
 
 
-@pytest.fixture(scope="session", autouse=False)
+@pytest.fixture(scope="session", autouse=True)
 def scope_delete_test_files():
     yield
     current_dir = os.path.dirname(os.path.abspath(__file__))
