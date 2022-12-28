@@ -30,7 +30,7 @@ jobs:
           env: 
             state_src: ./state-5.6.10.tgz
         - name: debug
-          run: whoami
+          run: sudo usermod -a -G docker runner
         - name: Run pytest                                       
           run: docker compose exec --user 1000 state_interface pytest /home/test_user/ase-state-interface
   flake8-lint:
