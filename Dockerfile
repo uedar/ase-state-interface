@@ -25,8 +25,6 @@ RUN wget https://www.fftw.org/fftw-3.3.10.tar.gz\
     && make -j\
     && sudo make install
 
-ARG pseudo_dir
-COPY ${pseudo_dir}/ /gncpp_pack
 
 # compile state
 COPY make-arch .
@@ -45,4 +43,3 @@ RUN add-apt-repository ppa:deadsnakes/ppa \
     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 
 RUN pip install ase pytest gitpython
-# USER $USER_NAME

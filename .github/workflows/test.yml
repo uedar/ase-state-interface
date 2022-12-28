@@ -9,16 +9,26 @@ jobs:
     steps:
         - name: Checkout source repository                                  
           uses: actions/checkout@v2
-        - name: Login to Docker                                
-          uses: docker/login-action@v1
-          with:
-            registry: ghcr.io
-            username: ${{ github.repository_owner }}
-            password: ${{ secrets.DOCKER_CONTINER_REGISTRY_TOKEN }}
-        - name: Set up Docker
+        # - name: Login to Docker                                
+        #   uses: docker/login-action@v1
+        #   with:
+        #     registry: ghcr.io
+        #     username: ${{ github.repository_owner }}
+        #     password: ${{ secrets.DOCKER_CONTINER_REGISTRY_TOKEN }}
+        - name: Download state src
           run: |
-            docker pull ghcr.io/uedar/ase-state-interface/state-interface:latest
+            curl -H "Authorization: token ${STATE_SRC_TOKEN} " \
+              -H 'Accept: application/vnd.github.v3.raw' \
+              -O \
+              -L https://api.github.com/repos/uedar/state-private/contents/state-5.6.10.tgz
+          env: 
+            STATE_SRC_TOKEN: ${{ secrets.STATE_SRC_TOKEN }}
+        - name: Build docker
+          run: |
+            docker compose build
             docker compose up -d
+          env: 
+            state_src: ./state-5.6.10.tgz
         - name: Run pytest                                       
           run: docker exec -T state_interface pytest /home/test_user/ase-state-interface
   flake8-lint:

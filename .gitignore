@@ -2,6 +2,6 @@
 .ipynb_checkpoints
 .vscode
 state*.tgz
-pot.*
+gncpp_pack/*
 *egg-info
 .env

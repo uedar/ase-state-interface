@@ -18,20 +18,11 @@ def test_scf():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     os.environ["ASE_STATE_COMMAND"] = f"{pw_loc} < {input_file} > {output_file}"
-    potential = "pot.He_lda1TM"
     pw_origin = "/state-5.6.10/src/STATE"
     pw_link = os.path.join(os.path.dirname(os.path.abspath(__file__)), "STATE")
     if os.path.exists(pw_link):
         os.remove(pw_link)
     os.symlink(pw_origin, pw_link)
-
-    pseudo_origin = "/gncpp_pack/" + potential
-    pseudo_link = os.path.join(os.path.dirname(os.path.abspath(__file__)), potential)
-    print(pseudo_link)
-    if os.path.exists(pseudo_link):
-        os.remove(pseudo_link)
-    os.symlink(pseudo_origin, pseudo_link)
-
     input_data = {
         "GMAX": 5,
         "GMAXP": 20,
@@ -39,7 +30,7 @@ def test_scf():
         "KPOINT_SHIFT": ["OFF", "OFF", "OFF"],
         "XCTYPE": "ggapbe",
         "NEG": 8,
-        "PSEUDOS": [["He", 4.0, potential]],
+        "PSEUDOS": [["He", 4.0, "pot.He_lda1TM"]],
     }
 
     dft_calc = STATE(label=label, input_data=input_data)
