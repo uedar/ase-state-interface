@@ -30,12 +30,10 @@ jobs:
             restore-keys: |
               ${{ runner.os }}-buildx-
 
-        - name: debug
-          run: pwd
         - uses: docker/build-push-action@v3
           with:
             context: .
-            push: true
+            push: false
             tags: ${{ github.sha }}
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache-new
@@ -52,6 +50,7 @@ jobs:
             docker compose up -d
         - name: Run pytest                                       
           run: docker compose exec -T state_interface pytest /ase-state-interface
+
   flake8-lint:
     runs-on: ubuntu-latest
     name: flake8

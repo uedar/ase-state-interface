@@ -9,14 +9,6 @@ RUN apt update \
     git software-properties-common curl \
     libblas-dev liblapack-dev
 
-# add user
-# ARG USER_UID=1000
-# ARG USER_NAME=test_user
-# ARG USER_PASSWORD=test
-# RUN useradd -m --uid ${USER_UID} --groups sudo ${USER_NAME} \
-#     && echo ${USER_NAME}:${USER_PASSWORD} | chpasswd \
-#     && echo "$USER_NAME   ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
 #install python
 RUN add-apt-repository ppa:deadsnakes/ppa \
     && apt update \
@@ -34,10 +26,7 @@ RUN wget https://www.fftw.org/fftw-3.3.10.tar.gz\
     && make -j\
     && sudo make install
 
-
 # compile state
-# USER $USER_NAME
-# ENV HOME /home/test_user
 COPY make-arch .
 ARG state_src
 COPY ${state_src} .
