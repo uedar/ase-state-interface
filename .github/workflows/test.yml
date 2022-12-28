@@ -38,7 +38,7 @@ jobs:
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache-new
             build-args: |
-               "state_src=./state-5.6.10.tgz"
+               "state_src='./state-5.6.10.tgz'"
 
         - name: Move cache
           run: |
