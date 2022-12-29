@@ -52,9 +52,9 @@ jobs:
             docker build -f './Dockerfile' -t ${{ steps.imagetag.outputs.TAG }} .
             docker save --output ${{ steps.imagetag.outputs.PATH_TAR }} ${{ steps.imagetag.outputs.TAG }}
         
-      - name: Run tests
-        run: |
-          docker run -u root -e OMPI_MCA_btl_vader_single_copy_mechanism=none -v "$(pwd)":/ase-state-interface -w /ase-state-interface ${{ steps.imagetag.outputs.TAG }} pytest
+        - name: Run tests
+          run: |
+            docker run -u root -e OMPI_MCA_btl_vader_single_copy_mechanism=none -v "$(pwd)":/ase-state-interface -w /ase-state-interface ${{ steps.imagetag.outputs.TAG }} pytest
         # - name: Run tests for both Go and Shell Script
         #   run: |
         #     docker run -u root -v "$(pwd)":${{ env.PATH_MOUNT }} -w ${{ env.PATH_MOUNT }} ${{ steps.imagetag.outputs.TAG }} "$path_entrypoint"
