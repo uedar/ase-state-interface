@@ -51,7 +51,10 @@ jobs:
             mkdir -p ${{ env.PATH_CACHE }}
             docker build -f './Dockerfile' -t ${{ steps.imagetag.outputs.TAG }} .
             docker save --output ${{ steps.imagetag.outputs.PATH_TAR }} ${{ steps.imagetag.outputs.TAG }}
-
+        
+      - name: Run tests
+        run: |
+          docker run -u root -e OMPI_MCA_btl_vader_single_copy_mechanism=none -v "$(pwd)":/ase-state-interface -w /ase-state-interface ${{ steps.imagetag.outputs.TAG }} pytest
         # - name: Run tests for both Go and Shell Script
         #   run: |
         #     docker run -u root -v "$(pwd)":${{ env.PATH_MOUNT }} -w ${{ env.PATH_MOUNT }} ${{ steps.imagetag.outputs.TAG }} "$path_entrypoint"
@@ -82,11 +85,11 @@ jobs:
         #     rm -rf /tmp/.buildx-cache
         #     mv /tmp/.buildx-cache-new /tmp/.buildx-cache
         
-        - name: Start docker
-          run: |
-            docker compose up -d
-        - name: Run pytest                                       
-          run: docker compose exec -T state_interface pytest /ase-state-interface
+        # - name: Start docker
+        #   run: |
+        #     docker compose up -d
+        # - name: Run pytest                                       
+        #   run: docker compose exec -T state_interface pytest /ase-state-interface
 
   flake8-lint:
     runs-on: ubuntu-latest
