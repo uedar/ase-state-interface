@@ -18,33 +18,66 @@ jobs:
               -L https://api.github.com/repos/uedar/state-private/contents/state-5.6.10.tgz
           env: 
             STATE_SRC_TOKEN: ${{ secrets.STATE_SRC_TOKEN }}
-
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v1
       
-        - name: Cache Docker layers
+        - name: Create image tag
+          id: imagetag
+          run: |
+            HASH_IMAGE=${{ hashFiles('./Dockerfile') }}
+            VARIANT=$(TZ=UTC-9 date '+%Y%m')${HASH_IMAGE:0:7}
+            NAME_IMAGE=myTestImage
+            TAG="${NAME_IMAGE}:${VARIANT}"
+            NAME_TAR="${NAME_IMAGE}.${VARIANT}.tar"
+            PATH_TAR=${{ env.PATH_CACHE }}"/${NAME_TAR}"
+            echo "::set-output name=TAG::${TAG}"
+            echo "::set-output name=PATH_TAR::${PATH_TAR}"
+  
+        - name: Enable cache
+          id: cache
           uses: actions/cache@v2
           with:
-            path: /tmp/.buildx-cache
-            key: ${{ runner.os }}-buildx-${{ github.sha }}
-            restore-keys: |
-              ${{ runner.os }}-buildx-
+            path: ${{ env.PATH_CACHE }}
+            key: ${{ steps.imagetag.outputs.TAG }}
 
-        - uses: docker/build-push-action@v3
-          with:
-            context: .
-            file: Dockerfile
-            push: false
-            tags: ${{ github.sha }}
-            cache-from: type=local,src=/tmp/.buildx-cache
-            cache-to: type=local,dest=/tmp/.buildx-cache-new
-            build-args: |
-               "state_src=state-5.6.10.tgz"
-
-        - name: Move cache
+        - name: Load Docker image if exists
+          if: steps.cache.outputs.cache-hit == 'true'
+          run: docker load --input ${{ steps.imagetag.outputs.PATH_TAR }}
+  
+        - name: Build Docker image and save
+          if: steps.cache.outputs.cache-hit != 'true'
           run: |
-            rm -rf /tmp/.buildx-cache
-            mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+            mkdir -p ${{ env.PATH_CACHE }}
+            docker build -f './.devcontainer/Dockerfile' -t ${{ steps.imagetag.outputs.TAG }} .
+            docker save --output ${{ steps.imagetag.outputs.PATH_TAR }} ${{ steps.imagetag.outputs.TAG }}
+
+        # - name: Run tests for both Go and Shell Script
+        #   run: |
+        #     docker run -u root -v "$(pwd)":${{ env.PATH_MOUNT }} -w ${{ env.PATH_MOUNT }} ${{ steps.imagetag.outputs.TAG }} "$path_entrypoint"
+        # - name: Set up Docker Buildx
+        #   uses: docker/setup-buildx-action@v1
+      
+        # - name: Cache Docker layers
+        #   uses: actions/cache@v2
+        #   with:
+        #     path: /tmp/.buildx-cache
+        #     key: ${{ runner.os }}-buildx-${{ github.sha }}
+        #     restore-keys: |
+        #       ${{ runner.os }}-buildx-
+
+        # - uses: docker/build-push-action@v3
+        #   with:
+        #     context: .
+        #     file: Dockerfile
+        #     push: false
+        #     tags: ${{ github.sha }}
+        #     cache-from: type=local,src=/tmp/.buildx-cache
+        #     cache-to: type=local,dest=/tmp/.buildx-cache-new
+        #     build-args: |
+        #        "state_src=state-5.6.10.tgz"
+
+        # - name: Move cache
+        #   run: |
+        #     rm -rf /tmp/.buildx-cache
+        #     mv /tmp/.buildx-cache-new /tmp/.buildx-cache
         
         - name: Start docker
           run: |
