@@ -49,7 +49,7 @@ jobs:
           if: steps.cache.outputs.cache-hit != 'true'
           run: |
             mkdir -p ${{ env.PATH_CACHE }}
-            docker build -f './.devcontainer/Dockerfile' -t ${{ steps.imagetag.outputs.TAG }} .
+            docker build -f './Dockerfile' -t ${{ steps.imagetag.outputs.TAG }} .
             docker save --output ${{ steps.imagetag.outputs.PATH_TAR }} ${{ steps.imagetag.outputs.TAG }}
 
         # - name: Run tests for both Go and Shell Script
