@@ -76,7 +76,9 @@ class STATE(FileIOCalculator):
                 print(*line, file=file)
             print("&END", file=file)
             print("&ATOMIC_COORDINATES", "CARTESIAN", file=file)
-            pseudo_idx = {lst[0]: i + 1 for i, lst in enumerate(input_data["PSEUDOS"])}
+            pseudo_idx = {
+                lst[0]: i for i, lst in enumerate(input_data["PSEUDOS"], start=1)
+            }
 
             constraints_idx = (
                 constraints[0].get_indices() if len(constraints) > 0 else []
