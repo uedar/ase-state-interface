@@ -54,7 +54,7 @@ jobs:
         
         - name: Run tests
           run: |
-            docker run -u root -e OMPI_MCA_btl_vader_single_copy_mechanism=none -v "$(pwd)":/ase-state-interface -w /ase-state-interface ${{ steps.imagetag.outputs.TAG }} pytest
+            docker run -u root -e DELETE_TEST_FILES=False -v "$(pwd)":/ase-state-interface -w /ase-state-interface ${{ steps.imagetag.outputs.TAG }} pytest
 
   flake8-lint:
     runs-on: ubuntu-latest

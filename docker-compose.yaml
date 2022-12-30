@@ -7,6 +7,3 @@ services:
       - .:/ase-state-interface
     tty: true
     stdin_open: true
-    environment:
-      - OMPI_MCA_btl_vader_single_copy_mechanism=none
-    # user: "1000:1000"
