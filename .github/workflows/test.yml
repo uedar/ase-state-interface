@@ -2,39 +2,59 @@ name: test
 
 on: [pull_request]
 
+env:
+  PATH_CACHE: /tmp/docker-img-arch
+
 jobs:
   pytest:
-    runs-on: ubuntu-latest
     name: pytest
-    steps:
-      - name: Check out source repository
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: ./.github/actions/build
-      - name: Run Tests
-        run: poetry run pytest tests
-
-  pylint:
     runs-on: ubuntu-latest
-    name: pylint
-    steps: 
-      - name: Check out source repository
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: ./.github/actions/build
-      - name: Setup pylint
-        run: |
-          poetry run pylint --generate-rcfile > ~/.pylintrc
-          echo 'ACTIONS_ALLOW_UNSECURE_COMMANDS=true' >> $GITHUB_ENV
-      - name: Setup reviewdog
-        run: |
-          mkdir -p $HOME/bin && curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh -s -- -b $HOME/bin
-          echo ::add-path::$HOME/bin
-      - name: Run pylint
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          poetry run pylint --rcfile=~/.pylintrc $(git ls-files '*.py') | reviewdog -efm="%f:%l:%c: %m" -reporter=github-pr-review -fail-on-error=true -diff="git diff FETCH_HEAD"
+    steps:
+        - name: Checkout source repository                                  
+          uses: actions/checkout@v2
+
+        - name: Download state src
+          run: |
+            curl -H "Authorization: token ${STATE_SRC_TOKEN} " \
+              -H 'Accept: application/vnd.github.v3.raw' \
+              -O \
+              -L https://api.github.com/repos/uedar/state-private/contents/state-5.6.10.tgz
+          env: 
+            STATE_SRC_TOKEN: ${{ secrets.STATE_SRC_TOKEN }}
+      
+        - name: Create image tag
+          id: imagetag
+          run: |
+            HASH_IMAGE=${{ hashFiles('./Dockerfile') }}
+            VARIANT=$(TZ=UTC-9 date '+%Y%m')${HASH_IMAGE:0:7}
+            NAME_IMAGE=state-interface
+            TAG="${NAME_IMAGE}:${VARIANT}"
+            NAME_TAR="${NAME_IMAGE}.${VARIANT}.tar"
+            PATH_TAR=${{ env.PATH_CACHE }}"/${NAME_TAR}"
+            echo "::set-output name=TAG::${TAG}"
+            echo "::set-output name=PATH_TAR::${PATH_TAR}"
+  
+        - name: Enable cache
+          id: cache
+          uses: actions/cache@v2
+          with:
+            path: ${{ env.PATH_CACHE }}
+            key: ${{ steps.imagetag.outputs.TAG }}
+
+        - name: Load Docker image if exists
+          if: steps.cache.outputs.cache-hit == 'true'
+          run: docker load --input ${{ steps.imagetag.outputs.PATH_TAR }}
+  
+        - name: Build Docker image and save
+          if: steps.cache.outputs.cache-hit != 'true'
+          run: |
+            mkdir -p ${{ env.PATH_CACHE }}
+            docker build -f './Dockerfile' -t ${{ steps.imagetag.outputs.TAG }} .
+            docker save --output ${{ steps.imagetag.outputs.PATH_TAR }} ${{ steps.imagetag.outputs.TAG }}
+        
+        - name: Run tests
+          run: |
+            docker run -u root -e DELETE_TEST_FILES=False -v "$(pwd)":/ase-state-interface -w /ase-state-interface ${{ steps.imagetag.outputs.TAG }} pytest
 
   flake8-lint:
     runs-on: ubuntu-latest
@@ -45,10 +65,11 @@ jobs:
       - name: Set up Python environment
         uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: "3.10"
       - name: flake8 Lint
         uses: reviewdog/action-flake8@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           fail_on_error: true
+          flake8_args: "--max-line-length 119"

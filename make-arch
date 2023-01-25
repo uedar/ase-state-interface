@@ -1,0 +1,20 @@
+
+################################# for gfortran #################################
+F90    = mpif90
+LINKER = mpif90
+OMP    = # -openmp
+OPT3   = -O3 
+FLAGS  = $(OMP) $(OPT3) -ffixed-form -ffixed-line-length-132 -fdec
+FLAGG  = $(OMP) $(OPT3) -ffree-form
+FLAGD  = $(OMP)
+
+FFTW_DIR = /usr/local/include/
+INCLUDE = -I$(FFTW_DIR)
+
+LIBS   = -L/usr/lib/x86_64-linux-gnu -lfftw3 -llapack -lblas
+
+CPPDIR  = /usr/bin
+CPP     = $(CPPDIR)/cpp -P -traditional
+
+P_FLAGS  = -D_FFTW3_ -D_GFORTRAN_ -D_TIMER_ -D_TEST_
+################################################################################

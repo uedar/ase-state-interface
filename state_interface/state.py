@@ -8,7 +8,7 @@ from ase.calculators.calculator import FileIOCalculator
 from ase.calculators.singlepoint import SinglePointDFTCalculator
 from ase.data import chemical_symbols
 import numpy as np
-from .io import read_state_output
+from state_interface.io import read_state_output
 
 ERROR_TEMPLATE = (
     'Property "%s" not available. Please try running STATE\n'
@@ -34,10 +34,17 @@ class STATE(FileIOCalculator):
     command = "STATE < PREFIX.in > PREFIX.out"
     discard_results_on_any_change = True
 
-    def __init__(self, label="state", atoms=None, **kwargs):
-        FileIOCalculator.__init__(self, label, atoms, **kwargs)
+    def __init__(
+        self,
+        ignore_bad_restart_file=FileIOCalculator._deprecated,
+        label="state",
+        atoms=None,
+        **kwargs,
+    ):
+        FileIOCalculator.__init__(self, label, ignore_bad_restart_file, atoms, **kwargs)
         self.calc = None
         self.label = label
+        self.parameters = kwargs["input_data"]
 
     def write_input(self, atoms, properties=None, system_changes=None):
         FileIOCalculator.write_input(self, atoms, properties, system_changes)
@@ -49,7 +56,8 @@ class STATE(FileIOCalculator):
         cell = atoms.get_cell() * 1 / Bohr
         constraints = atoms.constraints
         with open(self.label + ".in", "w", encoding="utf-8") as file:
-            input_data = self.parameters["input_data"]
+            input_data = self.parameters
+            input_data = {k.upper(): v for k, v in input_data.items()}
             print("#\n#\n#", file=file)
             print("NTYP", ntyp, file=file)
             print("NATM", natom, file=file)
@@ -70,7 +78,7 @@ class STATE(FileIOCalculator):
             print("&END", file=file)
             print("&ATOMIC_COORDINATES", "CARTESIAN", file=file)
             pseudo_idx = {
-                lst[0]: i + 1 for i, lst in enumerate(input_data["PSEUDOS"])
+                lst[0]: i for i, lst in enumerate(input_data["PSEUDOS"], start=1)
             }
 
             constraints_idx = (
@@ -97,9 +105,7 @@ class STATE(FileIOCalculator):
 
     def read_results(self):
         structure, energy, forces = read_state_output(self.label + ".out")
-        calc = SinglePointDFTCalculator(
-            structure, energy=energy, forces=forces
-        )
+        calc = SinglePointDFTCalculator(structure, energy=energy, forces=forces)
 
         self.calc = calc
         self.results = calc.results

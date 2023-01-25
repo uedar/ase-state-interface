@@ -1,0 +1,9 @@
+version: '3'
+services:
+  state_interface:
+    build: .
+    container_name: state_interface
+    volumes:
+      - .:/ase-state-interface
+    tty: true
+    stdin_open: true
