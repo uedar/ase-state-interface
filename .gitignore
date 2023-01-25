@@ -4,4 +4,3 @@
 state*.tgz
 gncpp_pack/*
 *egg-info
-.env
