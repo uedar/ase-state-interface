@@ -57,6 +57,7 @@ class STATE(FileIOCalculator):
         constraints = atoms.constraints
         with open(self.label + ".in", "w", encoding="utf-8") as file:
             input_data = self.parameters
+            input_data = {k.upper(): v for k, v in input_data.items()}
             print("#\n#\n#", file=file)
             print("NTYP", ntyp, file=file)
             print("NATM", natom, file=file)
